@@ -126,3 +126,19 @@ otus            checksum  sha256     local
 otus/hometask2  checksum  sha256     inherited from otus
 
 ####################################################
+
+Часть 3. Найти сообщение от преподавателей
+
+Скачиваем файл с снапшотом.
+Создаём ФС "otus/storage":
+zfs create otus/storage
+
+Импортируем снапшот:
+zfs receive otus/storage/text2 < otus_task2.file
+
+Ищем файл secret_message:
+find /otus/storage/ -name sec*
+/otus/storage/text2/task1/file_mess/secret_message
+
+Содержимое файла:
+https://github.com/sindresorhus/awesome
