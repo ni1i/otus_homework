@@ -1,1 +1,1 @@
-# otus_homework
+ДЗ по курсу Administrator Linux. Professional 
