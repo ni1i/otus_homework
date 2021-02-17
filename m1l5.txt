@@ -1,0 +1,86 @@
+1. Попасть в систему без пароля несколькими способами
+		
+		Вариант 1.
+Правим параметры при выборе ядра для загрузки. Добавляем init=/bin/sh, загружаем систему.
+sh-4.4#
+Перемонтируем в rw:
+sh-4.4# mount -o remount,rw /
+Проверяем командой mount | grep root, вывод: 
+sh-4.4# mount | grep root
+rootfs on / type rootfs (rw)
+/dev/mapper/cl_centos8-root on /sysroot type xfs (rw,realtime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+		Вариант 2.
+Правим параметры при выборе ядра для загрузки. В строку, начинающуюся с linux добавляем ключ rd.break. После загрузки перемонтируем систему в rw и меняем пароль:
+switch_root:/# mount -o remount,rw /sysroot
+switch_root:/# chroot /sysroot
+sh-4.4# passwd root
+Changing password for user root.
+New password:
+Retype new password:
+passwd: all authentication tokens updated successfully.
+sh-4.4# touch /.autorelabel
+sh-4.4#
+
+		Вариант 3.
+Правим параметры при выборе ядра для загрузки. Меняем ro на rw и добавляем init=/sysroot/bin/sh, загружаем систему.
+Проверяем командой mount | grep root, вывод: 
+:/#  mount | grep root
+rootfs on / type rootfs (rw)
+/dev/mapper/cl_centos8-root on /sysroot type xfs (rw,realtime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+########################################
+
+2. Установить систему с LVM, после чего переименовать VG
+
+Текущее состояние системы:
+[root@centos8 vagrant]# vgs
+  VG         #PV #LV #SN Attr   VSize    VFree
+  cl_centos8   1   2   0 wz--n- <127.00g <54.94g
+
+Переименовываем:
+[root@centos8 vagrant]# vgrename cl_centos8 OtusRoot
+Volume group "cl_centos8" successfully renamed to "OtusRoot"
+
+Вносим новые изменения в /etc/fstab, /etc/default/grub, /boot/grub2/grub.cfg
+
+Пересоздаем initrd image:
+[root@centos8 vagrant]# mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
+Creating: target|kernel|dracut args|basicmodules
+dracut: .....
+dracut: *** Creating image file '/boot/initramfs-4.18.0-240.10.1.el8_3.x86_64.img' ***
+dracut: *** Creating initramfs image file '/boot/initramfs-4.18.0-240.10.1.el8_3.x86_64.img' done ***
+
+Перезагружаем.
+
+Проверяем, что система стартовала с новым именем VG:
+[root@centos8 vagrant]# vgs
+  VG         #PV #LV #SN Attr   VSize    VFree
+  OtusRoot   1   2   0 wz--n- <127.00g <54.94g
+
+########################################
+
+3. Добавить модуль в initrd
+
+Создаём папку и помещаем в неё 2 скрипта:
+[root@centos8 vagrant]# mkdir /usr/lib/dracut/modules.d/01test
+[root@centos8 vagrant]# cd /usr/lib/dracut/modules.d/01test
+[root@centos8 01test]# touch module-setup.sh
+[root@centos8 01test]# touch test.sh
+[root@centos8 01test]# vim module-setup.sh
+[root@centos8 01test]# vim test.sh
+[root@centos8 01test]# dracut -f -v
+dracut: Executing: /usr/bin/dracut -f -v
+dracut: ...
+dracut: *** Creating image file '/boot/initramfs-4.18.0-240.10.1.el8_3.x86_64.img' ***
+dracut: *** Creating initramfs image file '/boot/initramfs-4.18.0-240.10.1.el8_3.x86_64.img' done ***
+
+Проверяем наличие модуля:
+
+[root@centos8 01test]# lsinitrd -m /boot/initramfs-$(uname -r).img | grep test
+test
+
+Убираем в опции rghb и quiet в grub.cfg
+При загрузке наблюдаем 10 сек пингвина из скрипта test.sh
+
+########################################
