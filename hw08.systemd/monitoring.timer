@@ -1,0 +1,9 @@
+[Unit]
+Description=Run every 30 seconds
+
+[Timer]
+OnUnitActiveSec=30
+Unit=monitoring.service
+
+[Install]
+WantedBy=multi-user.target
