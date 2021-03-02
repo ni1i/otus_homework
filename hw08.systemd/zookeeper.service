@@ -1,0 +1,13 @@
+[Unit]
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/home/vagrant/bin/zookeeper-server-start.sh /home/vagrant/config/zookeeper.properties
+ExecStop=/home/vagrant/bin/zookeeper-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target

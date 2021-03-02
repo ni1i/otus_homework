@@ -1,0 +1,13 @@
+[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+Type=simple
+User=vagrant
+ExecStart=/bin/sh -c '/home/vagrant/bin/kafka-server-start.sh /home/vagrant/config/server.properties > /home/vagrant/kafka.log 2>&1'
+ExecStop=/home/vagrant/bin/kafka-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
