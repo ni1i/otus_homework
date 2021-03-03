@@ -1,0 +1,12 @@
+[Unit]
+Description=Restart kafka.service
+Requires=kafka.service
+After=kafka.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/rm -f /home/vagrant/kafka/error.log
+ExecStart=/bin/systemctl restart kafka.service
+
+[Install]
+WantedBy=multi-user.target
