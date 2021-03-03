@@ -14,6 +14,10 @@ sudo cp /home/vagrant/zookeeper.service /etc/systemd/system/
 
 sudo cp /home/vagrant/kafka.service /etc/systemd/system/
 
+sudo touch /home/vagrant/kafka/kafka.log
+
+sudo chmod 777 /home/vagrant/kafka/kafka.log
+
 sudo systemctl daemon-reload
 
 sudo systemctl enable zookeeper.service
