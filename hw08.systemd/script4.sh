@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo yum install -y java-1.8.0-openjdk
+
 mkdir /home/vagrant/kafka
 
 curl https://downloads.apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz -o /home/vagrant/kafka/kafka.tgz
@@ -21,4 +23,3 @@ sudo systemctl start zookeeper.service
 sudo systemctl enable kafka.service
 
 sudo systemctl start kafka.service
-
