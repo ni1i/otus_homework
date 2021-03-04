@@ -15,7 +15,7 @@ Vagrant.configure(2) do |config|
       systemd.vm.provision "shell", path: "script1.sh"
       systemd.vm.provision "shell", path: "script2.sh"
       systemd.vm.provision "shell", path: "script3.sh"
-      systemd.vm.provision "shell", path: "script4.sh 
+      systemd.vm.provision "shell", path: "script4.sh"
     end
   
   end
