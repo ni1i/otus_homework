@@ -5,8 +5,8 @@ After=zookeeper.service
 [Service]
 Type=simple
 User=vagrant
-ExecStart=/bin/sh -c '/home/vagrant/kafka/bin/kafka-server-start.sh /home/vagrant/kafka/config/server.properties > /home/vagrant/kafka/kafka.log 2>&1'
-ExecStop=/home/vagrant/kafka/bin/kafka-server-stop.sh
+ExecStart=/bin/sh -c '/vagrant/kafka/bin/kafka-server-start.sh /vagrant/kafka/config/server.properties > /vagrant/kafka/kafka.log 2>&1'
+ExecStop=/vagrant/kafka/bin/kafka-server-stop.sh
 LimitMEMLOCK=128000
 LimitNOFILE=1500
 CPUQuota=50%

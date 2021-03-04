@@ -2,25 +2,25 @@
 
 sudo yum install -y java-1.8.0-openjdk
 
-mkdir /home/vagrant/kafka
+mkdir /vagrant/kafka
 
-curl https://downloads.apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz -o /home/vagrant/kafka/kafka.tgz
+curl https://downloads.apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz -o /vagrant/kafka/kafka.tgz
 
-cd /home/vagrant/kafka/
+cd /vagrant/kafka/
 
-sudo tar -xvzf /home/vagrant/kafka/kafka.tgz --strip 1
+sudo tar -xvzf /vagrant/kafka/kafka.tgz --strip 1
 
-sudo cp /home/vagrant/zookeeper.service /etc/systemd/system/
+sudo cp /vagrant/zookeeper.service /etc/systemd/system/
 
-sudo cp /home/vagrant/kafka.service /etc/systemd/system/
+sudo cp /vagrant/kafka.service /etc/systemd/system/
 
-sudo cp /home/vagrant/restart-kafka.service /etc/systemd/system/
+sudo cp /vagrant/restart-kafka.service /etc/systemd/system/
 
-sudo cp /home/vagrant/restart-kafka.path /etc/systemd/system/
+sudo cp /vagrant/restart-kafka.path /etc/systemd/system/
 
-sudo touch /home/vagrant/kafka/kafka.log
+sudo touch /vagrant/kafka/kafka.log
 
-sudo chmod 777 /home/vagrant/kafka/kafka.log
+sudo chmod 777 /vagrant/kafka/kafka.log
 
 sudo systemctl daemon-reload
 

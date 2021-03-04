@@ -1,3 +1,7 @@
+#!/bin/bash
+
+sudo yum install -y httpd
+
 sudo cp /usr/lib/systemd/system/httpd.service /etc/systemd/system/httpd@.service
 
 sudo sed -i '/^EnvironmentFile/ s/$/-%I/' /etc/systemd/system/httpd@.service

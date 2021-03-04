@@ -1,6 +1,8 @@
 #!/bin/bash
 
-sudo yum install -y epel-release php php-cli mod_fcgid httpd
+sudo yum install -y epel-release
+
+sudo yum install -y php php-cli mod_fcgid
 
 sudo yum install -y spawn-fcgi
 
