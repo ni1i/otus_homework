@@ -14,3 +14,4 @@ Restart=on-abnormal
 
 [Install]
 WantedBy=multi-user.target
+WantedBy=restart-kafka.service

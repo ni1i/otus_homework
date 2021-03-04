@@ -14,6 +14,10 @@ sudo cp /home/vagrant/zookeeper.service /etc/systemd/system/
 
 sudo cp /home/vagrant/kafka.service /etc/systemd/system/
 
+sudo cp /home/vagrant/restart-kafka.service /etc/systemd/system/
+
+sudo cp /home/vagrant/restart-kafka.path /etc/systemd/system/
+
 sudo touch /home/vagrant/kafka/kafka.log
 
 sudo chmod 777 /home/vagrant/kafka/kafka.log
@@ -27,3 +31,11 @@ sudo systemctl start zookeeper.service
 sudo systemctl enable kafka.service
 
 sudo systemctl start kafka.service
+
+sudo systemctl enable restart-kafka.service
+
+sudo systemctl enable restart-kafka.path
+
+sudo systemctl start restart-kafka.service
+
+sudo systemctl start restart-kafka.path
