@@ -2,5 +2,5 @@
 Description=Path to restart kafka
 
 [Path]
-PathExists=/home/vagrant/kafka/error.log
+PathExists=/vagrant/kafka/error.log
 Unit=restart-kafka.service

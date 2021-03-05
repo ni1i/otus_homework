@@ -4,11 +4,11 @@ sudo yum install -y java-1.8.0-openjdk
 
 mkdir /vagrant/kafka
 
-curl https://downloads.apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz -o /home/vagrant/kafka/kafka.tgz
+curl https://downloads.apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz -o /vagrant/kafka/kafka.tgz
 
-cd /home/vagrant/kafka/
+cd /vagrant/kafka/
 
-sudo tar -xvzf /home/vagrant/kafka/kafka.tgz --strip 1
+sudo tar -xvzf /vagrant/kafka/kafka.tgz --strip 1
 
 sudo cp /vagrant/zookeeper.service /etc/systemd/system/
 

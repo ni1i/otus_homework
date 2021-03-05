@@ -5,8 +5,8 @@ After=network.target remote-fs.target
 [Service]
 Type=simple
 User=vagrant
-ExecStart=/home/vagrant/kafka/bin/zookeeper-server-start.sh /home/vagrant/kafka/config/zookeeper.properties
-ExecStop=/home/vagrant/kafka/bin/zookeeper-server-stop.sh
+ExecStart=/vagrant/kafka/bin/zookeeper-server-start.sh /vagrant/kafka/config/zookeeper.properties
+ExecStop=/vagrant/kafka/bin/zookeeper-server-stop.sh
 Restart=on-abnormal
 
 [Install]
