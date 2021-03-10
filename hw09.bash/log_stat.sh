@@ -17,8 +17,8 @@ echo $Y "most requested URLs:" && cat access.log | awk '{print $7}' | sort | uni
 echo " *** *** *** "
 
 #Ошибки HTTP
-echo "HTTP errors:" && cat access.log | awk '{print $9}' | grep ^4 | sort | uniq -c | sort -rn | awk '{print $2 " - "  $1 " times."}' && cat access.log | awk '{print $9}' | grep ^5 | sort | uniq -c | sort -rn | awk '{print $2 " - "  $1 " times."}'
+echo "HTTP errors:" && cat access.log | awk '{print $9}' | grep ^4 | sort | uniq -c | sort -rn | awk '{print $2 " - " $1 " times."}' && cat access.log | awk '{print $9}' | grep ^5 | sort | uniq -c | sort -rn | awk '{print $2 " - " $1 " times."}'
 echo " *** *** *** "
 
 #Все коды HTTP и их количество
-echo "HTTP statuses:" && cat access.log | awk '{print $9}'| grep -v "-" | sort | uniq -c | sort -rn | awk '{print $2 " - "  $1 " times."}'
+echo "HTTP statuses:" && cat access.log | awk '{print $9}'| grep -v "-" | sort | uniq -c | sort -rn | awk '{print $2 " - " $1 " times."}'
