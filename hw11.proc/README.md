@@ -20,13 +20,41 @@
 Результат ДЗ - скрипт запускающий 2 процесса с разными nice и замеряющий время выполнения и лог консоли.
 
 ------
+1. Написать свою реализацию `ps ax` используя анализ `/proc`
 
-Скрипт psax.ps отображает аналог команды "ps ax" через /proc.
+Скрипт psax.ps отображает аналог команды `ps ax` через `/proc`.
 Выводится информацию о процессах в BSD формате:
-PID - отсортировывает числовые значения из /proc
-TTY - терминал, контролирующий процесс
-STAT - состояние процесса (R, S, D, Z и т.д.)
-TIME - время, занятое процессом ((utime+stime)/CLK_TCK)
-COMMAND - сведения о парметрах запущенного процесса
 
+*PID* - отсортировывает числовые значения из `/proc`
+
+*TTY* - терминал, контролирующий процесс
+
+*STAT* - состояние процесса (R, S, D, Z и т.д.)
+
+*TIME* - время, занятое процессом ((utime+stime)/CLK_TCK)
+
+*COMMAND* - сведения о парметрах запущенного процесса
+
+Вывод ps ax:
+```[root@proc vagrant]# ps ax
+  PID TTY      STAT   TIME COMMAND
+    1 ?        Ss     0:12 /usr/lib/systemd/systemd --switched-root --system --deserialize 21
+    2 ?        S      0:00 [kthreadd]
+    4 ?        S<     0:00 [kworker/0:0H]
+    6 ?        S      0:25 [ksoftirqd/0]
+    7 ?        S      0:04 [migration/0]
+    8 ?        S      0:00 [rcu_bh]
+    9 ?        S      0:16 [rcu_sched]
+```    
+Вывод psax.sh:
+```[root@proc vagrant]# ./my.sh
+    PID TTY     STAT         TIME COMMAND
+      1 ?       Ss           00:12 /usr/lib/systemd/systemd --switched-root --system --deserialize 21
+      2 ?       S            00:00 [kthreadd]
+      4 ?       S<           00:00 [kworker/0:0H]
+      6 ?       S            00:25 [ksoftirqd/0]
+      7 ?       S            00:04 [migration/0]
+      8 ?       S            00:00 [rcu_bh]
+      9 ?       S            00:16 [rcu_sched]
+```
 
