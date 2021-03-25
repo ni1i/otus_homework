@@ -16,3 +16,63 @@
    * при написании playbook/роли соблюдены перечисленные в задании условия
 
 ---
+На головной машине установили `python 2.7.18 (python -V)` и `ansible 2.9.6 (ansible --version)`. На управляемой машине установлен `python 2.7.5`.
+
+Узнаём параметры ssh-config:
+```
+uk@otus01:~/L13/Ansible$ vagrant ssh-config
+Host nginx
+  HostName 127.0.0.1
+  User vagrant
+  Port 2200
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  IdentityFile /home/uk/L13/Ansible/.vagrant/machines/nginx/virtualbox/private_key
+  IdentitiesOnly yes
+  LogLevel FATAL
+```
+Создаём `inventory` файл:
+```
+[web]
+nginx ansible_host=127.0.0.1 ansible_port=2200 ansible_user=vagrant ansible_private_key_file=/home/uk/L13/Ansible/.vagrant/machines/nginx/virtualbox/private_key
+```
+Кладём `inventory` в `/home/uk/L13/Ansible/staging/hosts` и проверяем управление хостом через `ansible`:
+
+```
+uk@otus01:~/L13/Ansible$ ansible nginx -i staging/hosts -m ping
+The authenticity of host '[127.0.0.1]:2200 ([127.0.0.1]:2200)' can't be established.
+ECDSA key fingerprint is SHA256:uON/pTWBm/zKkPasFO4dvh5g/vw5x53DA6PdjptkS0g.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+nginx | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+Создаём файл `ansible.cfg` в текущем каталоге:
+```
+[defaults]
+inventory = staging/hosts
+remote_user = vagrant
+host_key_checking = False
+retry_files_enabled = False
+```
+Убираем из `inventory` информацию о пользователе:
+```
+[web]
+nginx ansible_host=127.0.0.1 ansible_port=2200 ansible_private_key_file=/home/uk/L13/Ansible/.vagrant/machines/nginx/virtualbox/private_key
+```
+Проверяем, что управляемый хост доступен без явного указания `inventory` файла:
+```
+uk@otus01:~/L13/Ansible$ ansible nginx -m ping
+nginx | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
