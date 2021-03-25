@@ -173,4 +173,91 @@ playbook: nginx.yml
   play #1 (nginx): NGINX | Install and configure NGINX  TAGS: []
       TASK TAGS: [epel-package, nginx-package, packages]
 ```      
-Запустим только установку nginx:
+Запустим только установку `nginx`:
+```
+uk@otus01:~/L13/Ansible$ ansible-playbook nginx.yml -t nginx-package
+
+PLAY [NGINX | Install and configure NGINX] *********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Install NGINX package from EPEL Repo] ************************************************************************************************************************************************************************
+ok: [nginx]
+
+PLAY RECAP *****************************************************************************************************************************************************************************************************************
+nginx                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+Добавляем шаблон для конфигурирования `nginx` и модуль, копирующий его на хост:
+```
+- name: NGINX | Create NGINX config file from template
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      tags:
+        - nginx-configuration
+```        
+Прописываем переменную, определяющую порт, который будет слушать `nginx` (8080):
+```
+- name: NGINX | Install and configure NGINX
+  hosts: nginx
+  become: true
+  vars:
+    nginx_listen_port: 8080
+```
+Шаблон:
+```
+# {{ ansible_managed }}
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen       {{ nginx_listen_port }} default_server;
+        server_name  default_server;
+        root         /usr/share/nginx/html;
+
+        location / {
+        }
+    }
+}
+```
+Создаём `handler` и добавляем `notify` к копированию шаблона:
+```
+handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+    
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
+```
+Запускаем результирующий файл `nginx.yml`:
+```
+uk@otus01:~/L13/Ansible$ ansible-playbook nginx.yml
+
+PLAY [NGINX | Install and configure NGINX] *********************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Install EPEL Repo package from standart repo] ****************************************************************************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Install NGINX package from EPEL Repo] ************************************************************************************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Create NGINX config file from template] **********************************************************************************************************************************************************************
+changed: [nginx]
+
+RUNNING HANDLER [reload nginx] *********************************************************************************************************************************************************************************************
+changed: [nginx]
+
+PLAY RECAP *****************************************************************************************************************************************************************************************************************
+nginx                      : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
