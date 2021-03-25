@@ -18,6 +18,8 @@
 ---
 На головной машине установили `python 2.7.18 (python -V)` и `ansible 2.9.6 (ansible --version)`. На управляемой машине установлен `python 2.7.5`.
 
+## Часть 1
+
 Узнаём параметры ssh-config:
 ```
 uk@otus01:~/L13/Ansible$ vagrant ssh-config
@@ -76,3 +78,99 @@ nginx | SUCCESS => {
     "ping": "pong"
 }
 ```
+Проверяем какое ядро установлено на хосте:
+```
+uk@otus01:~/L13/Ansible$ ansible nginx -m command -a "uname -r"
+nginx | CHANGED | rc=0 >>
+3.10.0-1127.el7.x86_64
+```
+Проверяем статус `firewalld`:
+```
+uk@otus01:~/L13/Ansible$ ansible nginx -m systemd -a name=firewalld
+nginx | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "name": "firewalld",
+    "status": {
+        "ActiveEnterTimestampMonotonic": "0",
+        "ActiveExitTimestampMonotonic": "0",
+        "ActiveState": "inactive",
+        ...
+```
+Устанавливаем пакет epel-release на хост:
+```
+uk@otus01:~/L13/Ansible$ ansible nginx -m yum -a "name=epel-release state=present" -b
+nginx | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    ...
+```
+Создаём `playbook (epel.yml)`, который устанавливает пакет `epel-release` с содержимым:
+```
+---
+- name: Install EPEL Repo
+  hosts: nginx
+  become: true
+  tasks:
+   - name: Install EPEL Repo package from standard repo
+     yum:
+      name: epel-release
+      state: present
+```
+Запускаем `playbook`:
+```
+uk@otus01:~/L13/Ansible$ ansible-playbook epel.yml
+
+PLAY [Install EPEL Repo] ***************************************************************************************************************************************************************************************************
+
+TASK [Gathering Facts] *****************************************************************************************************************************************************************************************************
+ok: [nginx]
+
+TASK [Install EPEL Repo package from standard repo] ************************************************************************************************************************************************************************
+ok: [nginx]
+
+PLAY RECAP *****************************************************************************************************************************************************************************************************************
+nginx                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+Если выполнить команду `ansible nginx -m yum -a "name=epel-release state=absent" -b`, то пакет epel-release принудительно установится.
+
+## Часть 2. Написание playbook для установки nginx
+
+Создаём файл nginx.yml:
+```
+---
+- name: NGINX | Install and configure NGINX
+  hosts: nginx
+  become: true
+  
+  tasks:
+    - name: NGINX | Install EPEL Repo package from standart repo
+      yum:
+        name: epel-release
+        state: present
+      tags:
+        - epel-package
+        - packages
+
+    - name: NGINX | Install NGINX package from EPEL Repo
+      yum:
+        name: nginx
+        state: latest
+      tags:
+        - nginx-package
+        - packages
+```
+Проверим все теги `playbook`'a:
+```
+uk@otus01:~/L13/Ansible$ ansible-playbook nginx.yml --list-tags
+
+playbook: nginx.yml
+
+  play #1 (nginx): NGINX | Install and configure NGINX  TAGS: []
+      TASK TAGS: [epel-package, nginx-package, packages]
+```      
+Запустим только установку nginx:
