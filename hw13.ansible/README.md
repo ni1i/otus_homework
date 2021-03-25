@@ -261,3 +261,22 @@ changed: [nginx]
 PLAY RECAP *****************************************************************************************************************************************************************************************************************
 nginx                      : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
+Проверяем доступность:
+```
+uk@otus01:~/L13/Ansible$ curl http://192.168.11.150:8080
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>Welcome to CentOS</title>
+  <style rel="stylesheet" type="text/css">
+
+        html {
+        background-image:url(img/html-background.png);
+        background-color: white;
+        font-family: "DejaVu Sans", "Liberation Sans", sans-serif;
+        font-size: 0.85em;
+        line-height: 1.25em;
+        margin: 0 4% 0 4%;
+        }
+...        
+```
