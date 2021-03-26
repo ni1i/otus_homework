@@ -34,12 +34,13 @@ Host nginx
   IdentitiesOnly yes
   LogLevel FATAL
 ```
+Создаём каталог `Ansible`.
 Создаём `inventory` файл:
 ```
 [web]
-nginx ansible_host=127.0.0.1 ansible_port=2200 ansible_user=vagrant ansible_private_key_file=/home/uk/L13/Ansible/.vagrant/machines/nginx/virtualbox/private_key
+nginx ansible_host=127.0.0.1 ansible_port=2222 ansible_user=vagrant ansible_private_key_file=.vagrant/machines/nginx/virtualbox/private_key
 ```
-Кладём `inventory` в `/home/uk/L13/Ansible/staging/hosts` и проверяем управление хостом через `ansible`:
+Кладём `inventory` в `~/L13/Ansible/staging/hosts` и проверяем управление хостом через `ansible`:
 
 ```
 uk@otus01:~/L13/Ansible$ ansible nginx -i staging/hosts -m ping
@@ -65,7 +66,7 @@ retry_files_enabled = False
 Убираем из `inventory` информацию о пользователе:
 ```
 [web]
-nginx ansible_host=127.0.0.1 ansible_port=2200 ansible_private_key_file=/home/uk/L13/Ansible/.vagrant/machines/nginx/virtualbox/private_key
+nginx ansible_host=127.0.0.1 ansible_port=2222 ansible_private_key_file=.vagrant/machines/nginx/virtualbox/private_key
 ```
 Проверяем, что управляемый хост доступен без явного указания `inventory` файла:
 ```
