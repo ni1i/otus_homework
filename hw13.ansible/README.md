@@ -34,7 +34,6 @@ Host nginx
   IdentitiesOnly yes
   LogLevel FATAL
 ```
-Создаём каталог `Ansible`.
 Создаём `inventory` файл:
 ```
 [web]
