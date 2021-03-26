@@ -99,7 +99,7 @@ nginx | SUCCESS => {
         "ActiveState": "inactive",
         ...
 ```
-Устанавливаем пакет epel-release на хост:
+Устанавливаем пакет `epel-release` на хост:
 ```
 uk@otus01:~/L13/Ansible$ ansible nginx -m yum -a "name=epel-release state=present" -b
 nginx | CHANGED => {
@@ -140,7 +140,7 @@ nginx                      : ok=2    changed=0    unreachable=0    failed=0    s
 
 ## Часть 2. Написание playbook для установки nginx
 
-Создаём файл nginx.yml:
+Создаём файл `nginx.yml` а каталоге `playbooks`:
 ```
 ---
 - name: NGINX | Install and configure NGINX
@@ -166,7 +166,7 @@ nginx                      : ok=2    changed=0    unreachable=0    failed=0    s
 ```
 Проверим все теги `playbook`'a:
 ```
-uk@otus01:~/L13/Ansible$ ansible-playbook nginx.yml --list-tags
+uk@otus01:~/L13/Ansible$ ansible-playbook playbooks/nginx.yml --list-tags
 
 playbook: nginx.yml
 
@@ -205,7 +205,7 @@ nginx                      : ok=2    changed=0    unreachable=0    failed=0    s
   vars:
     nginx_listen_port: 8080
 ```
-Шаблон:
+Шаблон `nginx.conf.j2` кладём в `templates`:
 ```
 # {{ ansible_managed }}
 events {
@@ -239,7 +239,7 @@ handlers:
 ```
 Запускаем результирующий файл `nginx.yml`:
 ```
-uk@otus01:~/L13/Ansible$ ansible-playbook nginx.yml
+uk@otus01:~/L13/Ansible$ ansible-playbook playbooks/nginx.yml
 
 PLAY [NGINX | Install and configure NGINX] *********************************************************************************************************************************************************************************
 
