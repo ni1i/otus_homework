@@ -1,0 +1,56 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :PAM => {
+        :box_name => "centos/7",
+        :ip_addr => '192.168.11.150'
+    }
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+
+      config.vm.define boxname do |box|
+
+          box.vm.box = boxconfig[:box_name]
+          box.vm.host_name = boxname.to_s
+
+          box.vm.network "private_network", ip: boxconfig[:ip_addr]
+
+          box.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "200"]
+
+          end
+
+          box.vm.provision "shell", inline: <<-'SHELL'
+            yum install -y epel-release
+            yum install -y pam_script
+            useradd user1
+            echo "user1:0123456" | chpasswd
+            systemctl restart sshd
+            useradd user2
+            echo "user2:0123456" | chpasswd
+            groupadd admin
+            usermod -aG admin user1
+            sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+            sed -i "2i auth  required  pam_script.so"  /etc/pam.d/sshd
+            cat <<`EDIT' > /etc/pam_script
+            #!/bin/bash
+            if [[ `grep $PAM_USER /etc/group | grep 'admin'` ]]
+            then
+            exit 0
+            fi
+            if [[ `date +%u` > 5 ]]
+            then
+            exit 1
+            fi
+            EDIT
+            chmod +x /etc/pam_script
+            systemctl restart sshd  
+            SHELL
+
+      end
+  end
+end
