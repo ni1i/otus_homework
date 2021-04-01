@@ -85,6 +85,17 @@ Last login: Thu Apr  1 10:00:54 2021 from 192.168.11.1
 Docker version 20.10.5, build 55c4c88
 [user1@PAM ~]$ docker images
 REPOSITORY   TAG       IMAGE ID   CREATED   SIZE
-[user1@PAM ~]$
+[user1@PAM ~]$ systemctl restart docker
+[user1@PAM ~]$ systemctl status docker
+● docker.service - Docker Application Container Engine
+   Loaded: loaded (/usr/lib/systemd/system/docker.service; disabled; vendor preset: enabled)
+   Active: active (running) since Thu 2021-04-01 14:23:06 UTC; 49s ago
+     Docs: https://docs.docker.com
+ Main PID: 23671 (dockerd)
+    Tasks: 8
+   Memory: 51.8M
+      CPU: 3.037s
+   CGroup: /system.slice/docker.service
+           └─23671 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
 
 ```
