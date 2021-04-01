@@ -45,17 +45,23 @@ Last login: Thu Apr  1 07:51:49 2021 from 192.168.11.1
 ```
 
 ## Часть 2.  Дать конкретному пользователю права работать с докером и возможность рестартить докер сервис
+Наш `Vagrantfile` во второй части `shell` скрипта устанавливает и стартует `docker`:
+```
 sudo yum check-update
-
 curl -fsSL https://get.docker.com/ | sh
-
 sudo systemctl start docker
-
-sudo usermod -aG docker
-
+```
+Включаем пользователя `user1` в группу `docker`
+```
+sudo usermod -aG docker user1
+```
+Устанавливаем docker-compose и задаём права на папку:
+```
 sudo curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
 sudo chmod +x /usr/local/bin/docker-compose
-
+```
+Побавляем ссылку.
+```
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-
+```
+После проделанных манипуляций у нас установлен `docker` и `docker-compose` и у пользователя `user1` есть права перезапуск службы и работу с `docker`.
