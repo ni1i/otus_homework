@@ -44,3 +44,18 @@ user1@192.168.11.150's password:
 Last login: Thu Apr  1 07:51:49 2021 from 192.168.11.1
 ```
 
+## Часть 2.  Дать конкретному пользователю права работать с докером и возможность рестартить докер сервис
+sudo yum check-update
+
+curl -fsSL https://get.docker.com/ | sh
+
+sudo systemctl start docker
+
+sudo usermod -aG docker
+
+sudo curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+sudo chmod +x /usr/local/bin/docker-compose
+
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
