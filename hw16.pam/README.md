@@ -76,18 +76,7 @@ polkit.addRule(function(action, subject) {
 });
 ```
 Обновляем `systemd` до версии 234.
-
-
-
-
-
-
-
 После проделанных манипуляций у нас установлен `docker` и `docker-compose` и у пользователя `user1` есть права на перезапуск службы и работу с `docker`.
-
-
-
-
 ```
 uk@otus01:~/L16$ ssh user1@192.168.11.150
 user1@192.168.11.150's password:
@@ -97,8 +86,5 @@ Docker version 20.10.5, build 55c4c88
 [user1@PAM ~]$ docker images
 REPOSITORY   TAG       IMAGE ID   CREATED   SIZE
 [user1@PAM ~]$
+
 ```
-
-
----
-vi /etc/polkit-1/rules.d/01-dockerrestart.rules
