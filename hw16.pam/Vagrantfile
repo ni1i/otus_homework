@@ -59,6 +59,21 @@ EDIT
             sudo curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
             sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+            cat <<'EDIT2' > /etc/polkit-1/rules.d/10-docker.rules
+polkit.addRule(function(action, subject) {
+  if (action.id == "org.freedesktop.systemd1.manage-units" &&
+    action.lookup("unit") == "docker.service" &&
+    action.lookup("verb") == "restart" &&
+    subject.user == "user1") {
+    return polkit.Result.YES;
+  }
+});
+EDIT2
+             setenforce 0
+             yum install -y wget
+             wget https://copr.fedorainfracloud.org/coprs/jsynacek/systemd-backports-for-centos-7/repo/epel-7/jsynacek-systemd-backports-for-centos-7-epel-7.repo -O /etc/yum.repos.d/jsynacek-systemd-centos-7.repo
+             yum update systemd -y
+             setenforce 1
           SHELL
 
       end

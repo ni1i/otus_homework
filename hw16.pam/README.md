@@ -64,4 +64,41 @@ sudo chmod +x /usr/local/bin/docker-compose
 ```
 sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 ```
-После проделанных манипуляций у нас установлен `docker` и `docker-compose` и у пользователя `user1` есть права перезапуск службы и работу с `docker`.
+Для того, что бы пользоветель `user1` мог перезапускать службу `doker` делаем правило `/etc/polkit-1/rules.d/10-docker.rules` c содержимым:
+```
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        action.lookup("unit") == "docker.service" &&
+        action.lookup("verb") == "restart" &&
+	subject.user == "user1") {
+        return polkit.Result.YES;
+    }
+});
+```
+Обновляем `systemd` до версии 234.
+
+
+
+
+
+
+
+После проделанных манипуляций у нас установлен `docker` и `docker-compose` и у пользователя `user1` есть права на перезапуск службы и работу с `docker`.
+
+
+
+
+```
+uk@otus01:~/L16$ ssh user1@192.168.11.150
+user1@192.168.11.150's password:
+Last login: Thu Apr  1 10:00:54 2021 from 192.168.11.1
+[user1@PAM ~]$ docker --version
+Docker version 20.10.5, build 55c4c88
+[user1@PAM ~]$ docker images
+REPOSITORY   TAG       IMAGE ID   CREATED   SIZE
+[user1@PAM ~]$
+```
+
+
+---
+vi /etc/polkit-1/rules.d/01-dockerrestart.rules
