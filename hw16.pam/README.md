@@ -6,37 +6,41 @@ PAM
 ---
 
 ## Часть 1. Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников
+Vagrantfile поднимает машину и производит следующие действия:
 Устанавливаем `epel-release` и `pam_script`.
 Создаём два пользователя: `user1` и `user2`, пароль у обоих `0123456`.
-Создаём группу `admin`.
+Создаём группу `admin` и добавляем в неё пользователя `user1`.
+Правим `/etc/pam.d/sshd`, добавляя `auth  required  pam_script.so`.
+Создаём `/etc/pam_script` с содержанием:
+```
+#!/bin/bash
+if [[ `grep $PAM_USER /etc/group | grep 'admin'` ]]
+then
+exit 0
+fi
+if [[ `date +%u` > 5 ]]
+then
+exit 1
+fi
+```
+Тут указано условие на доступ для группы `admin`:
+```
+...
+`date +%u` > 5
+...
+```
+Даём разрешение на запуск скрипта `/etc/pam_script` и перегружаем `sshd`.
+Для проверки можно либо дождаться выходных, либо изменить дату, либо откорректировать условие (например, не пускать со среды) и поробовать зайти под обоими созданными пользователями.
+Пользователя `user2` не пускает, так как его нет в группе `admin`.
+```
+uk@otus01:~/L16$ ssh user2@192.168.11.150
+user2@192.168.11.150's password: 
+Permission denied, please try again.
+```
+Пользователя `user1` - пускает.
+```
+uk@otus01:~/L16$ ssh user1@192.168.11.150
+user1@192.168.11.150's password: 
+Last login: Thu Apr  1 07:51:49 2021 from 192.168.11.1
+```
 
-
-groupadd admin
-```
-Создаём пользователей `admin1` и `user1` с паролем `12345`:
-```
-[root@PAM vagrant]# useradd admin1
-[root@PAM vagrant]# useradd user1
-[root@PAM vagrant]# passwd admin1
-Changing password for user admin1.
-New password:
-BAD PASSWORD: The password is shorter than 7 characters
-Retype new password:
-passwd: all authentication tokens updated successfully.
-[root@PAM vagrant]# passwd user1
-Changing password for user user1.
-New password:
-BAD PASSWORD: The password is shorter than 7 characters
-Retype new password:
-passwd: all authentication tokens updated successfully.
-```
-Добавляем пользователя `admin1` в группу `admin`:
-```
-usermod -aG admin admin1
-```
-Проверяем:
-```
-[root@PAM vagrant]# id admin1
-uid=1004(admin1) gid=1005(admin1) groups=1005(admin1),1004(admin)
-```
-Устанавливаем модуль pam_script:
