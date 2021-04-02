@@ -36,3 +36,21 @@ server {
 [root@selinux vagrant]# systemctl start nginx
 Job for nginx.service failed because the control process exited with error code. See "systemctl status nginx.service" and "journalctl -xe" for details.
 ```
+Смотрим что нам про это говорит `audit.log` через `audit2why`:
+```
+[root@selinux vagrant]# audit2why < /var/log/audit/audit.log
+type=AVC msg=audit(1617374099.354:1356): avc:  denied  { name_bind } for  pid=3420 comm="nginx" src=32123 scontext=system_u:system_r:httpd_t:s0 tcontext=system_u:object_r:unreserved_port_t:s0 tclass=tcp_socket permissive=0
+
+        Was caused by:
+        The boolean nis_enabled was set incorrectly.
+        Description:
+        Allow nis to enabled
+
+        Allow access by executing:
+        # setsebool -P nis_enabled 1
+```
+Делаем как рекоммендует `audit2why`:
+```
+[root@selinux vagrant]# setsebool -P nis_enabled 1
+```
+Запускаем `nginx` и проверяем какой порт он слушает:
