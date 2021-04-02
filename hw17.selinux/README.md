@@ -119,7 +119,19 @@ To make this policy package active, execute:
 semodule -i http321123.pp
 ```
 Устанавливаем полученный модуль:
-
-aasad
-
-Запускаем `nginx` и проверяем на каком порту он слушает:
+```
+[root@selinux vagrant]# semodule -i http321123.pp
+```
+Запускаем `nginx` и проверяем что он работает на порту 32123:
+```
+[root@selinux vagrant]# systemctl start nginx
+[root@selinux vagrant]# netstat -tnlup
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:111             0.0.0.0:*               LISTEN      352/rpcbind
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      611/sshd
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      698/master
+tcp        0      0 0.0.0.0:32123           0.0.0.0:*               LISTEN      3644/nginx: master
+...
+```
+## Задание 2. Обеспечить работоспособность приложения при включенном selinux
