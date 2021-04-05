@@ -135,3 +135,64 @@ tcp        0      0 0.0.0.0:32123           0.0.0.0:*               LISTEN      
 ...
 ```
 ## Задание 2. Обеспечить работоспособность приложения при включенном selinux
+Запускаем стенд и проделываем описанный в его README запрос на изменение зоны:
+```
+[vagrant@client ~]$ nsupdate -k /etc/named.zonetransfer.key
+> server 192.168.50.10  
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.15
+> send
+update failed: SERVFAIL
+```
+Смотрим описание ошибки в логах на сервере через `audit2why` и `sealert`:
+```
+[root@ns01 vagrant]# audit2why < /var/log/audit/audit.log
+type=AVC msg=audit(1617612776.656:1932): avc:  denied  { write } for  pid=5185 comm="isc-worker0000" name="named" dev="sda1" ino=67538910 scontext=system_u:system_r:named_t:s0 tcontext=system_u:object_r:named_zone_t:s0 tclass=dir permissive=0
+...
+```
+```
+[root@ns01 vagrant]# sealert -a /var/log/audit/audit.log
+100% done
+found 2 alerts in /var/log/audit/audit.log
+--------------------------------------------------------------------------------
+
+SELinux is preventing /usr/sbin/named from write access on the directory named.
+
+*****  Plugin catchall_boolean (89.3 confidence) suggests   ******************
+...
+```
+В логах указана ошибка в правах доступа у `/usr/sbin/named` к директории и файлу `named.ddns.lab.view1.jnl`.
+Варианты исправления ошибки:
+1. Через установку флага:
+```
+  setsebool -P named_write_master_zones 1
+```
+2. Создание и уставновка модуля через `audit2allow`
+ ```
+ ausearch -c 'isc-worker0000' --raw | audit2allow -M my-iscworker0000
+   
+ semodule -i my-iscworker0000.pp
+```
+3. Изменение контекста для файла `named.ddns.lab.view1.jnl` через `semanage`
+```
+semanage fcontext -a -t FILE_TYPE 'named.ddns.lab.view1.jnl'
+
+where FILE_TYPE is one of the following: dnssec_trigger_var_run_t, ipa_var_lib_t, krb5_host_rcache_t, krb5_keytab_t, named_cache_t, named_log_t, named_tmp_t, named_var_run_t.
+
+restorecon -v 'named.ddns.lab.view1.jnl'
+```
+Попробуем устранить проблему изменением контекста для файла `named.ddns.lab.view1.jnl`, так как это решение является наиболее точечным и не предоставляет излишние разрешения.
+Файл `named.ddns.lab.view1` расположен в `/etc/named/dynamic/`, что указано в `named.conf`
+Выясняем тип файла:
+```
+[root@ns01 /]# ll -Z /etc/named/dynamic/named.ddns.lab.view1
+-rw-rw----. named named system_u:object_r:etc_t:s0       /etc/named/dynamic/named.ddns.lab.view1
+```
+Изменяем `FILE_TYPE` на `named_cache_t` (по умолчанию для `dynamic DNS` в `/var/named/dynamic/`):
+```
+[root@ns01 /]# semanage fcontext -a -t named_cache_t 'named.ddns.lab.view1.jnl'
+Killed
+```
+```
+[root@ns01 /]# restorecon -v '/etc/named/dynamic/named.ddns.lab.view1'
+```
