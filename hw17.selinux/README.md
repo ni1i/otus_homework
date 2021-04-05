@@ -188,11 +188,52 @@ restorecon -v 'named.ddns.lab.view1.jnl'
 [root@ns01 /]# ll -Z /etc/named/dynamic/named.ddns.lab.view1
 -rw-rw----. named named system_u:object_r:etc_t:s0       /etc/named/dynamic/named.ddns.lab.view1
 ```
-Изменяем `FILE_TYPE` на `named_cache_t` (по умолчанию для `dynamic DNS` в `/var/named/dynamic/`):
+Изменяем `FILE_TYPE` c `etc_t` на `named_cache_t` (по умолчанию для `dynamic DNS` в `/var/named/dynamic/`):
 ```
-[root@ns01 /]# semanage fcontext -a -t named_cache_t 'named.ddns.lab.view1.jnl'
-Killed
+[root@ns01 /]# semanage fcontext -a -t named_cache_t '/etc/named/dynamic(/.*)?'
+[root@ns01 /]# restorecon -R -v /etc/named/dynamic/
+restorecon reset /etc/named/dynamic context unconfined_u:object_r:etc_t:s0->unconfined_u:object_r:named_cache_t:s0
+restorecon reset /etc/named/dynamic/named.ddns.lab context system_u:object_r:etc_t:s0->system_u:object_r:named_cache_t:s0
 ```
+Проверяем, что тип изменился:
 ```
-[root@ns01 /]# restorecon -v '/etc/named/dynamic/named.ddns.lab.view1'
+[root@ns01 /]# ll -Z /etc/named/dynamic/named.ddns.lab.view1
+-rw-rw----. named named system_u:object_r:named_cache_t:s0 /etc/named/dynamic/named.ddns.lab.view1
+```
+Проверяем изменение зоны с клиента:
+```
+[vagrant@client ~]$ nsupdate -k /etc/named.zonetransfer.key
+> server 192.168.50.10
+> zone ddns.lab
+> update add www.ddns.lab. 60 A 192.168.50.15
+> send
+```
+Сервер не возвращает ошибку.
+
+Удаляем `named.ddns.lab.view1.jnl`, на который ругается статус службы `named`, перегружаем службу и проверяем:
+```
+[root@ns01 /]# rm /etc/named/dynamic/named.ddns.lab.view1.jnl
+rm: remove regular file '/etc/named/dynamic/named.ddns.lab.view1.jnl'? y
+[root@ns01 /]# systemctl restart named
+[root@ns01 /]# systemctl status named
+● named.service - Berkeley Internet Name Domain (DNS)
+   Loaded: loaded (/usr/lib/systemd/system/named.service; enabled; vendor preset: disabled)
+   Active: active (running) since Mon 2021-04-05 14:55:53 UTC; 47s ago
+  Process: 29689 ExecStop=/bin/sh -c /usr/sbin/rndc stop > /dev/null 2>&1 || /bin/kill -TERM $MAINPID (code=exited, status=0/SUCCESS)
+  Process: 29728 ExecStart=/usr/sbin/named -u named -c ${NAMEDCONF} $OPTIONS (code=exited, status=0/SUCCESS)
+  Process: 29726 ExecStartPre=/bin/bash -c if [ ! "$DISABLE_ZONE_CHECKING" == "yes" ]; then /usr/sbin/named-checkconf -z "$NAMEDCONF"; else echo "Checking of zone files is disabled"; fi (code=exited, status=0/SUCCESS)
+ Main PID: 29731 (named)
+   CGroup: /system.slice/named.service
+           └─29731 /usr/sbin/named -u named -c /etc/named.conf
+
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './DNSKEY/IN': 2001:500:2::c#53
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './NS/IN': 2001:500:2::c#53
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './DNSKEY/IN': 2001:7fd::1#53
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './NS/IN': 2001:7fd::1#53
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './DNSKEY/IN': 2001:500:9f::42#53
+Apr 05 14:55:54 ns01 named[29731]: network unreachable resolving './NS/IN': 2001:500:9f::42#53
+Apr 05 14:55:54 ns01 named[29731]: managed-keys-zone/view1: Key 20326 for zone . acceptance timer complete: key now trusted
+Apr 05 14:55:54 ns01 named[29731]: managed-keys-zone/default: Key 20326 for zone . acceptance timer complete: key now trusted
+Apr 05 14:55:54 ns01 named[29731]: resolver priming query complete
+Apr 05 14:55:54 ns01 named[29731]: resolver priming query complete
 ```
