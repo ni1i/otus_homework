@@ -18,4 +18,5 @@
 
 -----
 На скриншоте дашборд `Grafana`, собирающий метрики от `Prometheus` через `Node Exporter`.
-!alt.text
+
+![p+g](grafana-prometheus.jpg)
