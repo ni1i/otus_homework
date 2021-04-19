@@ -1,0 +1,58 @@
+$sdb = <<-SHELL1
+sudo yum -y install parted
+sudo parted /dev/sdb mklabel GPT
+sudo parted -a opt /dev/sdb mkpart primary ext4  0% 100%
+sudo mkfs.ext4 /dev/sdb1
+sudo mount /dev/sdb1 /mnt
+sudo cp -a /var/* /mnt
+sudo mount /dev/sdb1 /var && sudo umount /mnt
+sudo cat /etc/mtab | grep /dev/sdb >> /etc/fstab
+sudo yum update -y
+sudo yum install epel-release -y
+sudo yum install borgbackup -y
+sudo useradd -m borg
+SHELL1
+
+$cli = <<-SHELL2
+sudo yum update -y
+sudo yum install epel-release -y
+sudo yum install borgbackup -y
+sudo useradd -m borg
+SHELL2
+
+backupdisk = "./tmp/backupdisk.vdi";
+
+server_ip = "192.168.11.150";
+client_ip = "192.168.11.151";
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "server" do |server|
+    server.vm.network "private_network", ip: server_ip
+    server.vm.hostname = "server"
+    server.vm.define "server"
+    server.vm.box_download_insecure = true
+    server.vm.box = "centos/7"
+    server.vm.provider "virtualbox" do |vb1|
+      vb1.memory = "2048"
+      if not File.exists?(backupdisk)
+        vb1.customize ['createhd', '--filename', backupdisk, '--variant', 'Fixed', '--size', 2 * 1024]
+        vb1.customize ['storageattach', :id,  '--storagectl', 'IDE', '--port', 0, '--device', 1, '--type', 'hdd', '--medium', backupdisk]
+      end
+    end
+    server.vm.provision "shell", inline: $sdb
+  end
+
+  config.vm.define "client" do |client|
+    client.vm.network "private_network", ip: client_ip
+    client.vm.hostname = "client"
+    client.vm.define "client"
+    client.vm.box_download_insecure = true
+    client.vm.box = "centos/7"
+    client.vm.provider "virtualbox" do |vb2|
+      vb2.memory = "2048"
+    end  
+  client.vm.provision "shell", inline: $cli
+  end  
+  
+end
