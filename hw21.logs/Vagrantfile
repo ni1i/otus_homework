@@ -1,0 +1,78 @@
+$web = <<-SHELL1
+sudo yum update -y
+sudo yum install epel-release -y
+sudo yum install nginx -y
+sudo yum install rsyslog -y
+sudo yum install audispd-plugins.x86_64 -y
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl start rsyslog
+sudo systemctl enable rsyslog
+sudo auditctl -w /etc/nginx/ -k nginx_watch
+sudo auditctl -l >> /etc/audit/rules.d/nginx.rules
+sudo sed -i 's/.*access_log.*/access_log syslog:server=192.168.50.11:514 main;/' /etc/nginx/nginx.conf
+sudo sed -i 's/.*error_log.*/error_log syslog:server=192.168.50.11:514;/' /etc/nginx/nginx.conf
+sudo sed -i '/.*error_log.*/a error_log /var/log/nginx/error.log;' /etc/nginx/nginx.conf
+sudo touch /etc/rsyslog.d/err.conf
+sudo echo "*.err @@192.168.50.11:514" >> /etc/rsyslog.d/err.conf
+sudo touch /etc/rsyslog.d/alert.conf
+sudo echo "*.alert @@192.168.50.11:514" >> /etc/rsyslog.d/alert.conf
+sudo touch /etc/rsyslog.d/crit.conf
+sudo echo "*.crit @@192.168.50.11:514" >> /etc/rsyslog.d/crit.conf
+sudo touch /etc/rsyslog.d/warning.conf
+sudo echo "*.warning @@192.168.50.11:514" >> /etc/rsyslog.d/warning.conf
+sudo touch /etc/rsyslog.d/notice.conf
+sudo echo "*.notice @@192.168.50.11:514" >> /etc/rsyslog.d/notice.conf
+sudo sed -i 's/active = no/active = yes/' /etc/audisp/plugins.d/au-remote.conf
+sudo sed -i 's/remote_server =/remote_server = 192.168.50.11/' /etc/audisp/audisp-remote.conf
+sudo sed -i 's/write_logs = yes/write_logs = no/' /etc/audit/auditd.conf
+sudo service auditd restart
+sudo systemctl restart rsyslog
+sudo systemctl restart nginx
+SHELL1
+
+$log = <<-SHELL2
+sudo yum update -y
+sudo yum install epel-release -y
+sudo yum install rsyslog -y
+sudo systemctl enable rsyslog
+sudo systemctl start rsyslog
+sudo sed -i '/.*#tcp_listen_port.*/a tcp_listen_port = 60' /etc/audit/auditd.conf
+sudo sed -i 's/#$ModLoad imudp/$ModLoad imudp/' /etc/rsyslog.conf
+sudo sed -i 's/#$UDPServerRun 514/$UDPServerRun 514/' /etc/rsyslog.conf
+sudo sed -i 's/#$ModLoad imtcp/$ModLoad imtcp/' /etc/rsyslog.conf
+sudo sed -i 's/#$InputTCPServerRun 514/$InputTCPServerRun 514/' /etc/rsyslog.conf
+sudo echo "\$template RemoteLogs,\"/var/log/%HOSTNAME%/%PROGRAMNAME%.log\"" >> /etc/rsyslog.conf
+sudo echo "*.* ?RemoteLogs" >> /etc/rsyslog.conf
+sudo echo "& ~" >> /etc/rsyslog.conf
+sudo service auditd restart
+sudo systemctl restart rsyslog
+SHELL2
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "web" do |web|
+    web.vm.network "private_network", ip: "192.168.11.150"
+    web.vm.hostname = "web"
+    web.vm.define "web"
+    web.vm.box_download_insecure = true
+    web.vm.box = "centos/7"
+    web.vm.provider "virtualbox" do |vb1|
+      vb1.memory = "2048"
+    end
+  web.vm.provision "shell", inline: $web
+  end
+
+  config.vm.define "log" do |log|
+    log.vm.network "private_network", ip: "192.168.11.151"
+    log.vm.hostname = "log"
+    log.vm.define "log"
+    log.vm.box_download_insecure = true
+    log.vm.box = "centos/7"
+    log.vm.provider "virtualbox" do |vb2|
+      vb2.memory = "2048"
+  
+    end
+  log.vm.provision "shell", inline: $log  
+  end
+end
