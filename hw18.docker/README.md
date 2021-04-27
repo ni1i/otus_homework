@@ -46,4 +46,4 @@ Apr 27 14:00:38 docker dockerd[413]: time="2021-04-27T14:00:38.830386748Z" level
 Hint: Some lines were ellipsized, use -l to show in full.
 
 ```
-Создаём
+Правим дефолтную страничку nginx (index.html) и забираем её для дальнейшего импорта в кастомный образ.
