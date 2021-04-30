@@ -56,6 +56,32 @@ Hint: Some lines were ellipsized, use -l to show in full.
 
 ```
 Правим дефолтную страничку nginx (index.html) и забираем её для дальнейшего импорта в кастомный образ, кладём в папку `html`.
+Готовим `Dockerfile`:
+```
+FROM nginx:alpine
+COPY ./default.conf /etc/nginx/conf.d/
+COPY html /usr/share/nginx/html
+```
+и `default.conf` для `nginx`:
+```
+server {
+    listen       8080;
+    server_name  localhost;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+```
+
 Собираем образ:
 ```
 [root@docker vagrant]# docker build -t nginx_my:otus .
