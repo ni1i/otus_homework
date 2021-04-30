@@ -11,7 +11,7 @@
 
 * Собранный образ необходимо запушить в docker hub и дать ссылку на ваш репозиторий.
 ---
-Ссылка на собранный образ в `Dockerhub`: **`[https://hub.docker.com/repository/docker/ni1i/nginx_my](https://hub.docker.com/repository/docker/ni1i/nginx_my)`**
+Ссылка на собранный образ в `Dockerhub`: [https://hub.docker.com/repository/docker/ni1i/nginx_my] (https://hub.docker.com/repository/docker/ni1i/nginx_my)`**
 
 Для запуска образа:
 ```
