@@ -11,6 +11,15 @@
 
 * Собранный образ необходимо запушить в docker hub и дать ссылку на ваш репозиторий.
 ---
+Ссылка на собранный образ в `Dockerhub`: **`https://hub.docker.com/repository/docker/ni1i/nginx_my`**
+Для запуска образа:
+```
+docker pull ni1i/nginx_my
+docker run -d -p 8080:80 ni1i/nginx_my
+```
+
+Описание ДЗ:
+
 Обновляем индекс пакетов:
 ```
 sudo yum check-update
@@ -46,4 +55,57 @@ Apr 27 14:00:38 docker dockerd[413]: time="2021-04-27T14:00:38.830386748Z" level
 Hint: Some lines were ellipsized, use -l to show in full.
 
 ```
-Правим дефолтную страничку nginx (index.html) и забираем её для дальнейшего импорта в кастомный образ.
+Правим дефолтную страничку nginx (index.html) и забираем её для дальнейшего импорта в кастомный образ, кладём в папку `html`.
+Собираем образ:
+```
+[root@docker vagrant]# docker build -t nginx_my:otus .
+Sending build context to Docker daemon   21.5kB
+Step 1/3 : FROM nginx:alpine
+ ---> a64a6e03b055
+Step 2/3 : COPY ./default.conf /etc/nginx/conf.d/
+ ---> Using cache
+ ---> 091c5cc993ee
+Step 3/3 : COPY html /usr/share/nginx/html
+ ---> 07be09cd175c
+Successfully built 07be09cd175c
+Successfully tagged nginx_my:otus
+
+```
+Находим собранный образ и запускаем его на порту 8080:
+```
+[root@docker vagrant]docker imagesss
+REPOSITORY   TAG       IMAGE ID       CREATED              SIZE
+nginx_my     otus      07be09cd175c   About a minute ago   22.6MB
+[root@docker vagrant]# docker run -d -p 8080:80 07be09cd175c
+3c7b866e2cbac6d764915dcc7ef6ee17d96da5dc9d5e9e4907a146494869c08a
+```
+Заходим в запущенный образ:
+```
+[root@docker vagrant]# docker exec -it 259197872a0406260db0fe3e2da31ce31b7cb724cfe12a780dbe9cd4172deae sh
+/ #
+```
+Смотрим на нашу изменённую страницу:
+```
+/ # curl http://localhost:8080
+CTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <title>###NEW DAFAULT PAGE###</title>
+  <style rel="stylesheet" type="text/css">
+...
+```
+Заливаем полученный контейнер в `dockerhub`:
+```
+[root@docker vagrant]# docker push ni1i/nginx_my
+Using default tag: latest
+The push refers to repository [docker.io/ni1i/nginx_my]
+0dea9115714c: Pushed
+310c68a1c699: Pushed
+4689e8eca613: Mounted from library/nginx
+3480549413ea: Mounted from library/nginx
+3c369314e003: Mounted from library/nginx
+4531e200ac8d: Mounted from library/nginx
+ed3fe3f2b59f: Mounted from library/nginx
+b2d5eeeaba3a: Mounted from library/nginx
+latest: digest: sha256:fbe2872fddee1ba01c6119ca762e955c46495ccabdb83262b92b2fd800b0871e size: 1983
+```
