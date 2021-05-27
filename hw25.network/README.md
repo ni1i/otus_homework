@@ -140,7 +140,10 @@ echo "192.168.255.10/32 via 192.168.255.2 dev eth1" >> /etc/sysconfig/network-sc
 {ip: '192.168.255.5', adapter: 6, netmask: "255.255.255.252", virtualbox__intnet: "c-o1"},
 {ip: '192.168.255.9', adapter: 7, netmask: "255.255.255.252", virtualbox__intnet: "c-o2"}
 ```
-
+```
+echo "192.168.2.0/24 via 192.168.255.6 dev eth5" > /etc/sysconfig/network-scripts/route-eth5
+echo "192.168.1.0/24 via 192.168.255.10 dev eth6" > /etc/sysconfig/network-scripts/route-eth6
+```
 ## centralServer ##
 
 ```
