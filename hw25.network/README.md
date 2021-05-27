@@ -107,3 +107,63 @@ Office2----/
 Ошибок при разбиении не выявил.
 
 ## Практическая часть ##
+Для выполнения ДЗ в стендовый Vagrantfile с тремя машинами (inetRouter, centralRouter, centralServer) добавлены ещё четыре:
+
+    office1Router
+    office2Router
+    office1Server
+    office2Server
+
+На схеме представлена структура получившейся сети и указаны интерфейсы.
+
+![network](network.jpg)
+
+В Vagrantfile добавлены интерфейсы и маршруты для eth1.
+
+## inetRouter ###
+```
+{ip: '192.168.255.1', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"}
+```
+## centralRouter ##
+```
+{ip: '192.168.255.2', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
+{ip: '192.168.0.1', adapter: 3, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
+{ip: '192.168.0.33', adapter: 4, netmask: "255.255.255.240", virtualbox__intnet: "hw-net"},
+{ip: '192.168.0.65', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "mgt-net"},
+{ip: '192.168.255.5', adapter: 6, netmask: "255.255.255.252", virtualbox__intnet: "c-o1"},
+{ip: '192.168.255.9', adapter: 7, netmask: "255.255.255.252", virtualbox__intnet: "c-o2"}
+```
+
+## centralServer ##
+
+```
+{ip: '192.168.0.2', adapter: 2, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
+```
+
+## office1Router ##
+```
+{ip: '192.168.255.6', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "c-o1"},
+{ip: '192.168.2.1', adapter: 3, netmask: "255.255.255.192", virtualbox__intnet: "o1-serv"},
+{ip: '192.168.2.65', adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "test-servers"},
+{ip: '192.168.2.129', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "managers"},
+{ip: '192.168.2.193', adapter: 6, netmask: "255.255.255.192", virtualbox__intnet: "office-hardware"}
+```
+## office1Server ##
+```
+{ip: '192.168.2.2', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "o1-serv"}
+```
+## office2Router ##
+```
+{ip: '192.168.255.10', adapter:2, netmask: "255.255.255.252", virtualbox__intnet: "c-o2"},
+{ip: '192.168.1.1', adapter: 3, netmask: "255.255.255.128", virtualbox__intnet: "o2-serv"},
+{ip: '192.168.1.129', adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "test-servers"},
+{ip: '192.168.1.193', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "office-hardware"}
+```
+## office2Server ##
+```
+{ip: '192.168.1.2', adapter: 2, netmask: "255.255.255.128", virtualbox__intnet: "o2-serv"}
+```
+На всех новых серверах отключен дефолт на NAT (eth0).
+
+
+
