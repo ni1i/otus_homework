@@ -16,10 +16,11 @@
 автоматизировать процесс установки Cobbler cледуя шагам из документа https://cobbler.github.io/quickstart/
 
 -----
-Для выполнения ДЗ в стендовом `Vagrantfile` увеличим память для обоих VM до 2048 и изменим в `setup_pxe.sh` автоматическую загрузку из `kickstart` файла по nfs на загрузку по http с VM `pxeserver`:
+Для выполнения ДЗ в стендовом `Vagrantfile` увеличим память для обоих VM до 2048 и изменим в `setup_pxe.sh` автоматическую загрузку из `kickstart` файла по nfs на загрузку по http с VM `pxeserver` с установленного `nginx`:
 ```
 ...
 append initrd=images/CentOS-8/initrd.img ip=enp0s3:dhcp inst.ks=http://10.0.0.20/ks.cfg inst.repo=http://10.0.0.20/centos8-install
 ...
 ```
-После `vagrant up` поднимается две VM: `pxeserver` и `pxeclient`. На `pxeclient` запускается автоустановка с файла автоответов, скачиваемого по http с `pxeserver`.
+После `vagrant up` поднимается две VM: `pxeserver` и `pxeclient`. На `pxeclient` запускается автоустановка с файла автоответов `ks.cfg`, скачиваемого по http с `pxeserver`.
+Версия CentOS изменена на 8.3.2011.
