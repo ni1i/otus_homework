@@ -19,8 +19,24 @@
 Для выполнения ДЗ в стендовом `Vagrantfile` увеличим память для обоих VM до 2048 и изменим в `setup_pxe.sh` автоматическую загрузку из `kickstart` файла по nfs на загрузку по http с VM `pxeserver` с установленного `nginx`:
 ```
 ...
-append initrd=images/CentOS-8/initrd.img ip=enp0s3:dhcp inst.ks=http://10.0.0.20/ks.cfg inst.repo=http://10.0.0.20/centos8-install
+LABEL linux-auto
+  menu label ^Auto install system
+  menu default
+  kernel images/CentOS-8.3/vmlinuz
+  append initrd=images/CentOS-8.3/initrd.img ip=enp0s3:dhcp inst.repo=http://10.0.0.20/centos8-install inst.ks=http://10.0.0.20/ks.cfg
 ...
 ```
 После `vagrant up` поднимается две VM: `pxeserver` и `pxeclient`. На `pxeclient` запускается автоустановка с файла автоответов `ks.cfg`, скачиваемого по http с `pxeserver`.
 Версия CentOS изменена на 8.3.2011.
+```
+...
+curl -O http://ftp.mgts.by/pub/CentOS/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-minimal.iso
+mkdir /mnt/centos8-install
+mount -t iso9660 CentOS-8.3.2011-x86_64-minimal.iso /mnt/centos8-install
+...
+```
+![p1](p1.jpg)
+![p2](p2.jpg)
+![p3](p3.jpg)
+![p4](p4.jpg)
+![p5](p5.jpg)
