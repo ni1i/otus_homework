@@ -1,0 +1,216 @@
+---
+  - name: PXE server configuration 
+    hosts: pxeserver
+    become: true
+
+    tasks:
+    - name: epel-release
+      yum: 
+        name: epel-release 
+        state: installed
+
+    - name: Install dhcp-server
+      yum: 
+        name: dhcp-server
+        state: installed
+
+    - name: Install tftp-server
+      yum: 
+        name: tftp-server
+        state: installed
+
+    - name: Install nginx
+      yum: 
+        name: nginx
+        state: installed
+
+    - name: IPtables Configuration
+      shell: systemctl enable firewalld
+
+    - name: IPtables Configuration
+      shell: systemctl start firewalld
+      
+    - name: IPtables Configuration 1
+      shell: firewall-cmd --permanent --add-service=tftp
+      
+    - name: IPtables Configuration 2
+      shell: firewall-cmd --permanent --add-port=80/tcp
+
+    - name: IPtables Configuration 3
+      shell: firewall-cmd --reload
+
+    - name: Set SELinux in permissive mode 
+      command: setenforce 0
+
+    - name: Make DHCP conf
+      shell:
+        cmd: |
+          cat >/etc/dhcp/dhcpd.conf <<EOF
+          option space pxelinux;
+          option pxelinux.magic code 208 = string;
+          option pxelinux.configfile code 209 = text;
+          option pxelinux.pathprefix code 210 = text;
+          option pxelinux.reboottime code 211 = unsigned integer 32;
+          option architecture-type code 93 = unsigned integer 16;
+          subnet 10.0.0.0 netmask 255.255.255.0 {
+          range 10.0.0.100 10.0.0.120;
+          class "pxeclients" {
+            match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+            next-server 10.0.0.20;
+            if option architecture-type = 00:07 {
+              filename "uefi/shim.efi";
+              } else {
+              filename "pxelinux/pxelinux.0";
+              }
+            }
+          }
+          EOF
+
+    - name: Start DHCP
+      shell: systemctl start dhcpd
+
+    - name: Start tftp.service
+      command: systemctl start tftp.service
+
+    - name: syslinux-tftpboot
+      yum:
+        name: syslinux-tftpboot.noarch
+        state: installed
+
+    - name: pxelinux tuning 1
+      file: path=/var/lib/tftpboot/pxelinux state=directory
+
+    - name: pxelinux tuning 2
+      shell: cp /tftpboot/pxelinux.0 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 3
+      shell: cp /tftpboot/libutil.c32 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 4
+      shell: cp /tftpboot/menu.c32 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 5
+      shell: cp /tftpboot/libmenu.c32 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 6
+      shell: cp /tftpboot/ldlinux.c32 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 7
+      shell: cp /tftpboot/vesamenu.c32 /var/lib/tftpboot/pxelinux
+
+    - name: pxelinux tuning 8
+      file: path=/var/lib/tftpboot/pxelinux/pxelinux.cfg state=directory
+
+    - name: Make PXE menu
+      shell:
+       cmd: |
+        cat >/var/lib/tftpboot/pxelinux/pxelinux.cfg/default <<EOF
+        default menu
+        prompt 0
+        timeout 600
+        MENU TITLE Demo PXE setup
+        LABEL linux
+          menu label ^Install system
+          kernel images/CentOS-8.3/vmlinuz
+          append initrd=images/CentOS-8.3/initrd.img ip=enp0s3:dhcp inst.repo=http://10.0.0.20/centos8-install
+        LABEL linux-auto
+          menu label ^Auto install system
+          menu default
+          kernel images/CentOS-8.3/vmlinuz
+          append initrd=images/CentOS-8.3/initrd.img ip=enp0s3:dhcp inst.repo=http://10.0.0.20/centos8-install inst.ks=http://10.0.0.20/ks.cfg
+        LABEL vesa
+          menu label Install system with ^basic video driver
+          kernel images/CentOS-8.3/vmlinuz
+          append initrd=images/CentOS-8.3/initrd.img ip=dhcp inst.xdriver=vesa nomodeset
+        LABEL rescue
+          menu label ^Rescue installed system
+          kernel images/CentOS-8.3/vmlinuz
+          append initrd=images/CentOS-8.3/initrd.img rescue
+        LABEL local
+          menu label Boot from ^local drive
+          localboot 0xffff
+        EOF
+  
+    - name: making dir pxelinux/images/CentOS-8.3
+      file: path=/var/lib/tftpboot/pxelinux/images/CentOS-8.3/ state=directory
+
+    - name: download initrd.img
+      shell: curl -O http://ftp.mgts.by/pub/CentOS/8.3.2011/BaseOS/x86_64/os/images/pxeboot/initrd.img
+
+    - name: download vmlinuz
+      shell: curl -O http://ftp.mgts.by/pub/CentOS/8.3.2011/BaseOS/x86_64/os/images/pxeboot/vmlinuz
+
+    - name: making menu dir/files 4
+      shell: cp {vmlinuz,initrd.img} /var/lib/tftpboot/pxelinux/images/CentOS-8.3/
+
+    - name: cp {vmlinuz,initrd.img}
+      shell: curl -O http://ftp.mgts.by/pub/CentOS/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-minimal.iso
+
+    - name: making dir /mnt/centos8-install
+      file: path=/mnt/centos8-install state=directory  
+    
+    - name: mount CentOS-8.3.2011-x86_64-minimal.iso
+      shell: mount -t iso9660 CentOS-8.3.2011-x86_64-minimal.iso /mnt/centos8-install        
+
+    - name: edit nginx.conf
+      shell: sed -i 's#/usr/share/nginx/html#/mnt#' /etc/nginx/nginx.conf
+
+    - name: start nginx.service
+      command: systemctl start nginx.service
+
+    - name: enable nginx.service
+      command: systemctl enable nginx.service
+
+    - name: edit nginx.conf
+      shell: sed -i 's#/usr/share/nginx/html#/mnt#' /etc/nginx/nginx.conf
+
+    - name: comm
+      shell: curl -O http://ftp.mgts.by/pub/CentOS/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-minimal.iso
+
+    - name: comm
+      file: path=/mnt/centos8-autoinstall state=directory
+
+    - name: Make PXE menu
+      shell:
+       cmd: |
+        cat > /mnt/ks.cfg <<EOF
+        #version=RHEL8
+        ignoredisk --only-use=sda
+        autopart --type=lvm
+        # Partition clearing information
+        clearpart --all --initlabel --drives=sda
+        # Use graphical install
+        graphical
+        # Keyboard layouts
+        keyboard --vckeymap=us --xlayouts='us'
+        # System language
+        lang en_US.UTF-8
+        #repo
+        #url --url=http://ftp.mgts.by/pub/CentOS/8.2.2004/BaseOS/x86_64/os/
+        # Network information
+        network  --bootproto=dhcp --device=enp0s3 --ipv6=auto --activate
+        network  --bootproto=dhcp --device=enp0s8 --onboot=off --ipv6=auto --activate
+        network  --hostname=localhost.localdomain
+        # Root password
+        rootpw --iscrypted $6$g4WYvaAf1mNKnqjY$w2MtZxP/Yj6MYQOhPXS2rJlYT200DcBQC5KGWQ8gG32zASYYLUzoONIYVdRAr4tu/GbtB48.dkif.1f25pqeh.
+        # Run the Setup Agent on first boot
+        firstboot --enable
+        # Do not configure the X Window System
+        skipx
+        # System services
+        services --enabled="chronyd"
+        # System timezone
+        timezone America/New_York --isUtc
+        user --groups=wheel --name=val --password=$6$ihX1bMEoO3TxaCiL$OBDSCuY.EpqPmkFmMPVvI3JZlCVRfC4Nw6oUoPG0RGuq2g5BjQBKNboPjM44.0lJGBc7OdWlL17B3qzgHX2v// --iscrypted --gecos="val"
+        %packages
+        @^minimal-environment
+        kexec-tools
+        %end
+        %addon com_redhat_kdump --enable --reserve-mb='auto'
+        %end
+        %anaconda
+        pwpolicy root --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+        pwpolicy user --minlen=6 --minquality=1 --notstrict --nochanges --emptyok
+        pwpolicy luks --minlen=6 --minquality=1 --notstrict --nochanges --notempty
+        %end
+        EOF
