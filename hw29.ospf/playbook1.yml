@@ -1,0 +1,148 @@
+---
+- name: OSPF settings
+  hosts: all
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Epel-release install
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Quagga install
+      yum:
+        name: quagga
+        state: present
+  
+    - name: Disable ssl epel-release
+      lineinfile: 
+        dest: /etc/yum.repos.d/epel.repo
+        insertafter: 'enabled=1'
+        line: 'sslverify=0'
+
+    - name: Disable SELinux
+      selinux:
+        state: disabled
+
+    - name: net.ipv4.ip_forward ON
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: net.ipv4.conf.all.rp_filter ON
+      sysctl:
+        name: net.ipv4.conf.all.rp_filter
+        value: '0'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+- name: VM1 settings
+  hosts: VM1
+  become: true
+  gather_facts: false
+  tasks:    
+    - name: Copy settings to VM1
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+          - { src: 'files/zebraVM1.conf', dest: '/etc/quagga/zebra.conf' }
+          - { src: 'files/ospfdVM1.conf', dest: '/etc/quagga/ospfd.conf' }
+          - { src: 'files/ifcfg-VM1VM2-VM1', dest: '/etc/sysconfig/network-scripts/ifcfg-VM1VM2' }
+          - { src: 'files/ifcfg-VM1VM3-VM1', dest: '/etc/sysconfig/network-scripts/ifcfg-VM1VM3' }
+
+    - name: change file ownership ospfd.conf
+      file:
+        path: /etc/quagga/ospfd.conf
+        owner: quagga
+        group: quagga
+
+    - name: change file ownership zebra.conf
+      file:
+        path: /etc/quagga/zebra.conf
+        owner: quagga
+        group: quagga           
+
+    - name: restart zebra
+      service:
+        name: zebra
+        state: restarted
+
+    - name: restart ospfd
+      service:
+        name: ospfd
+        state: restarted
+
+- name: VM2 settings
+  hosts: VM2
+  become: yes
+  gather_facts: false
+  tasks:    
+
+    - name: Copy settings to VM2
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+           - { src: 'files/zebraVM2.conf', dest: '/etc/quagga/zebra.conf' }
+           - { src: 'files/ospfdVM2.conf', dest: '/etc/quagga/ospfd.conf' }
+           - { src: 'files/ifcfg-VM1VM2-VM2', dest: '/etc/sysconfig/network-scripts/ifcfg-VM1VM2' }
+           - { src: 'files/ifcfg-VM2VM3-VM2', dest: '/etc/sysconfig/network-scripts/ifcfg-VM2VM3' }
+
+    - name: change file ownership ospfd.conf
+      file:
+        path: /etc/quagga/ospfd.conf
+        owner: quagga
+        group: quagga
+
+    - name: change file ownership zebra.conf
+      file:
+        path: /etc/quagga/zebra.conf
+        owner: quagga
+        group: quagga
+
+    - name: restart zebra
+      service:
+        name: zebra
+        state: restarted
+
+    - name: restart ospfd
+      service:
+        name: ospfd
+        state: restarted
+
+- name: VM3 settings
+  hosts: VM3
+  become: yes
+  gather_facts: false
+  tasks:            
+
+    - name: Copy settings to VM3
+      copy: src={{ item.src }} dest={{ item.dest }}
+      with_items:
+           - { src: 'files/zebraVM3.conf', dest: '/etc/quagga/zebra.conf' }
+           - { src: 'files/ospfdVM3.conf', dest: '/etc/quagga/ospfd.conf' }
+           - { src: 'files/ifcfg-VM2VM3-VM3', dest: '/etc/sysconfig/network-scripts/ifcfg-VM2VM3' }
+           - { src: 'files/ifcfg-VM1VM3-VM3', dest: '/etc/sysconfig/network-scripts/ifcfg-VM1VM3' }
+
+    - name: change file ownership ospfd.conf
+      file:
+        path: /etc/quagga/ospfd.conf
+        owner: quagga
+        group: quagga
+
+    - name: change file ownership zebra.conf
+      file:
+        path: /etc/quagga/zebra.conf
+        owner: quagga
+        group: quagga
+
+    - name: restart zebra
+      service:
+        name: zebra
+        state: restarted
+
+    - name: restart ospfd
+      service:
+        name: ospfd
+        state: restarted

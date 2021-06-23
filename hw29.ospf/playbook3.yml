@@ -1,0 +1,44 @@
+---
+- name: Symmetric routing with expensive link
+  hosts: VMs
+  become: yes
+  tasks:
+   - name: Change cost 1000 on VM1
+     block:
+       - name: Copy settings
+         copy: src={{ item.src }} dest={{ item.dest }}
+         with_items:
+              - { src: 'files/ospfdVM1cost.conf', dest: '/etc/quagga/ospfd.conf' }
+         
+       - name: change file ownership ospfd.conf
+         file:
+            path: /etc/quagga/ospfd.conf
+            owner: quagga
+            group: quagga
+      
+       - name: Restart service ospfd
+         service:
+            name: ospfd
+            state: restarted
+
+     when: ansible_hostname == "VM1"
+
+   - name: Change cost 1000 on VM3
+     block:
+       - name: Copy settings
+         copy: src={{ item.src }} dest={{ item.dest }}
+         with_items:
+              - { src: 'files/ospfdVM3cost.conf', dest: '/etc/quagga/ospfd.conf' }
+         
+       - name: change file ownership ospfd.conf
+         file:
+            path: /etc/quagga/ospfd.conf
+            owner: quagga
+            group: quagga
+      
+       - name: Restart service ospfd
+         service:
+            name: ospfd
+            state: restarted
+
+     when: ansible_hostname == "VM3"

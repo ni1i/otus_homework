@@ -1,0 +1,47 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.box_check_update = true
+   
+  config.vm.define "VM1" do |vm1|
+    vm1.vm.hostname = 'VM1'
+    vm1.vm.network "private_network", ip: "10.0.0.1", netmask: "255.255.255.0" , adapter: 2,  virtualbox__intnet: "VM1"
+    vm1.vm.network "private_network", ip: "192.168.254.1", netmask: "255.255.255.0" , adapter: 3,  virtualbox__intnet: "VM1VM2"
+    vm1.vm.network "private_network", ip: "192.168.255.1", netmask: "255.255.255.0" , adapter: 4,  virtualbox__intnet: "VM1VM3"
+    vm1.vm.provider :virtualbox do |v|
+    v.name = "VM1"
+    end
+
+  end
+  
+  config.vm.define "VM2", primary: true do |vm2|
+    vm2.vm.hostname = 'VM2'
+    vm2.vm.network "private_network", ip: "10.0.1.1", netmask: "255.255.255.0" , adapter: 2,  virtualbox__intnet: "VM2"
+    vm2.vm.network "private_network", ip: "192.168.254.2", netmask: "255.255.255.0" , adapter: 3,  virtualbox__intnet: "VM1VM2"
+    vm2.vm.network "private_network", ip: "192.168.253.1", netmask: "255.255.255.0" , adapter: 4,  virtualbox__intnet: "VM2VM3"
+    vm2.vm.provider :virtualbox do |v|
+    v.name = "VM2"
+
+    end
+ 
+  end
+
+  config.vm.define "VM3" do |vm3|
+    vm3.vm.hostname = 'VM3'
+    vm3.vm.network "private_network", ip: "10.0.3.1", netmask: "255.255.255.0" , adapter: 2,  virtualbox__intnet: "VM3"
+    vm3.vm.network "private_network", ip: "192.168.255.2", netmask: "255.255.255.0" , adapter: 3,  virtualbox__intnet: "VM1VM3"
+    vm3.vm.network "private_network", ip: "192.168.253.2", netmask: "255.255.255.0" , adapter: 4,  virtualbox__intnet: "VM2VM3"
+    vm3.vm.provider :virtualbox do |v|
+    v.name = "VM3"
+    end
+
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "./playbook1.yml"
+    ansible.become = "true"
+  end
+  
+end

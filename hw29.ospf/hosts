@@ -1,0 +1,4 @@
+[VMs]
+VM1 ansible_ssh_host=127.0.0.1 ansible_port=2222 ansible_ssh_user=vagrant ansible_private_key_file=.vagrant/machines/VM1/virtualbox/private_key
+VM2 ansible_ssh_host=127.0.0.1 ansible_port=2200 ansible_ssh_user=vagrant ansible_private_key_file=.vagrant/machines/VM2/virtualbox/private_key
+VM3 ansible_ssh_host=127.0.0.1 ansible_port=2201 ansible_ssh_user=vagrant ansible_private_key_file=.vagrant/machines/VM3/virtualbox/private_key
