@@ -15,8 +15,9 @@ VPN
 
 ![31vpn1](31vpn1.png)
 
-### Проверяем, что VPN работает через tap:
+### Проверяем VPN через tap:
 ```
+...
 4: tap0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN group default qlen 100
     link/ether 66:61:f5:0d:e5:61 brd ff:ff:ff:ff:ff:ff
     inet 10.1.1.1/24 brd 10.1.1.255 scope global tap0
@@ -55,4 +56,41 @@ Connecting to host 10.1.1.1, port 5201
 
 iperf Done.
 ```
-Для смены режима запускаем плейбук `ansible-playbook playbook2.yml`
+### Проверяем VPN через tap:
+
+Для смены режима запускаем плейбук `ansible-playbook playbook2.yml`, проверяем, что режим изменился на `tun`:
+```
+...
+5: tun0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN group default qlen 100
+    link/none
+    inet 10.1.1.2/24 brd 10.1.1.255 scope global tun0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::85bb:6799:4e28:c3cc/64 scope link flags 800
+       valid_lft forever preferred_lft forever
+```
+Проверяем прохождение трафика с *client*:
+```
+[vagrant@client ~]$ iperf3 -c 10.1.1.1 -t 100 -i 10
+Connecting to host 10.1.1.1, port 5201
+[  4] local 10.1.1.2 port 59542 connected to 10.1.1.1 port 5201
+[ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+[  4]   0.00-10.00  sec  14.8 MBytes  12.4 Mbits/sec    0    589 KBytes
+[  4]  10.00-20.01  sec  13.6 MBytes  11.4 Mbits/sec   61    546 KBytes
+[  4]  20.01-30.01  sec  14.1 MBytes  11.8 Mbits/sec   17    468 KBytes
+[  4]  30.01-40.00  sec  13.4 MBytes  11.2 Mbits/sec    5    552 KBytes
+[  4]  40.00-50.00  sec  13.8 MBytes  11.6 Mbits/sec   16    358 KBytes
+[  4]  50.00-60.00  sec  14.8 MBytes  12.4 Mbits/sec    5    390 KBytes
+[  4]  60.00-70.00  sec  13.7 MBytes  11.5 Mbits/sec   24    403 KBytes
+[  4]  70.00-80.00  sec  13.0 MBytes  10.9 Mbits/sec    0    687 KBytes
+[  4]  80.00-90.00  sec  14.1 MBytes  11.8 Mbits/sec   50    554 KBytes
+[  4]  90.00-100.00 sec  14.0 MBytes  11.7 Mbits/sec   16    495 KBytes
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bandwidth       Retr
+[  4]   0.00-100.00 sec   139 MBytes  11.7 Mbits/sec  194             sender
+[  4]   0.00-100.00 sec   138 MBytes  11.6 Mbits/sec                  receiver
+
+iperf Done.
+```
+Сравнивая скорость пропускную способность режимов `tap` и `tun`, можно говорить, что `tun` незначительно выше.
+Основное различие в режимах - это то, что `tun` работает в `L3`, а `tap` в `L2`. Например, если нужно объединить две разные локальные сети в одну условно общую, но с разной адресацией, то нужен `tun`. Если же стоит задача объединить 2 удаленные сети в единое адресное пространство, например сделать и в офисе, и в филиале единую сеть, то тогда используется `tap` интерфейс. Оба офиса окажутся в одном широковещательном домене и смогут передавать данные с помощью широковещания на канальном уровне сетевой модели OSI.
+
