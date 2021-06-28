@@ -56,7 +56,7 @@ Connecting to host 10.1.1.1, port 5201
 
 iperf Done.
 ```
-### Проверяем VPN через tap:
+### Проверяем VPN через tun:
 
 Для смены режима запускаем плейбук `ansible-playbook playbook2.yml`, проверяем, что режим изменился на `tun`:
 ```
