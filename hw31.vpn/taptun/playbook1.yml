@@ -1,0 +1,67 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - epel-release
+ 
+  - name: Disable SELinux
+    selinux:
+      state: disabled
+
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - openvpn
+      - iperf3
+ 
+  - name: Open TCP port 5201
+    firewalld:
+      port: 5201/tcp
+      permanent: yes
+      state: enabled
+
+  - name: OpenVPN server settings
+    block:
+      
+    - name: create key
+      shell: openvpn --genkey --secret /etc/openvpn/static.key
+    - name:  Synchronization key
+      fetch:
+        src: /etc/openvpn/static.key
+        dest: files
+    - name: configure server
+      copy:
+        src: tap/server.conf
+        dest: /etc/openvpn/server.conf
+    - name: 
+      systemd:
+        state: started
+        name: openvpn@server
+        enabled: yes
+    when: ansible_hostname == "server"
+
+  - name: OpenVPN client settings
+    block:
+    - name: configure client
+      copy:
+        src: tap/client.conf
+        dest: /etc/openvpn/server.conf
+    - name:  Synchronization key
+      copy:
+        src: files/server/etc/openvpn/static.key
+        dest: /etc/openvpn/static.key
+    - name: started server
+      systemd:
+        state: started
+        name: openvpn@server
+        enabled: yes
+    when: ansible_hostname == "client"

@@ -1,0 +1,31 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+    config.vm.box = "centos/7"
+    config.vm.box_check_update = true
+     
+    config.vm.define "server" do |s|
+      s.vm.hostname = 'server'
+      s.vm.network "private_network", ip: "10.0.0.10", netmask: "255.255.255.0" , adapter: 2,  virtualbox__intnet: "vpn"
+      s.vm.provider :virtualbox do |v|
+      v.name = "server"
+      end
+  
+    end
+    
+    config.vm.define "client" do |c|
+        c.vm.hostname = 'client'
+        c.vm.network "private_network", ip: "10.0.0.20", netmask: "255.255.255.0" , adapter: 2,  virtualbox__intnet: "vpn"
+        c.vm.provider :virtualbox do |v|
+        v.name = "client"
+        end
+    
+      end
+   
+    config.vm.provision "ansible" do |ansible|
+      ansible.playbook = "./playbook1.yml"
+      ansible.become = "true"
+   end
+    
+  end

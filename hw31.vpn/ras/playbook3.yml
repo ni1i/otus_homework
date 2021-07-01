@@ -1,0 +1,123 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - epel-release
+ 
+  - name: Disable SELinux
+    selinux:
+      state: disabled
+
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - openvpn
+      - iperf3
+      - easy-rsa
+
+  - name: Open TCP port 5201
+    firewalld:
+      port: 5201/tcp
+      permanent: yes
+      state: enabled
+
+- name: RAS server settings
+  hosts: server
+  become: true
+  tasks:
+
+    - name: ca.crt
+      copy:
+        src: files/ca.crt
+        dest: /etc/openvpn/ca.crt
+    
+    - name: server.key
+      copy:
+        src: files/server.key
+        dest: /etc/openvpn/server.key
+    
+    - name: server.crt
+      copy:
+        src: files/server.crt
+        dest: /etc/openvpn/server.crt
+
+    - name: dh.pem
+      copy:
+        src: files/dh.pem
+        dest: /etc/openvpn/dh.pem
+    
+    - name: ta.key
+      copy:
+        src: files/ta.key
+        dest: /etc/openvpn/ta.key
+
+    - name: client.key
+      copy:
+        src: files/client.key
+        dest: /etc/openvpn/client.key
+
+    - name: client.crt
+      copy:
+        src: files/client.crt
+        dest: /etc/openvpn/client.crt
+    
+    - name: crl.pem
+      copy:
+        src: files/crl.pem
+        dest: /etc/openvpn/crl.pem
+
+    - name: create rasserver config
+      copy:
+        src: files/server.conf
+        dest: /etc/openvpn/server.conf
+
+    - name: start openvpn server
+      systemd:
+        name: openvpn@server
+        enabled: yes
+        state: restarted
+
+- name: RAS client settings
+  hosts: client
+  become: true
+  gather_facts: no
+  tasks:
+    - name: copy rasclient config
+      copy:
+        src: files/client.conf
+        dest: /etc/openvpn/client.conf
+
+    - name: ca.crt
+      copy:
+        src: files/ca.crt
+        dest: /etc/openvpn/ca.crt
+
+    - name: ta.key
+      copy:
+        src: files/ta.key
+        dest: /etc/openvpn/ta.key
+
+    - name: client.key
+      copy:
+        src: files/client.key
+        dest: /etc/openvpn/client.key
+
+    - name: client.crt
+      copy:
+        src: files/client.crt
+        dest: /etc/openvpn/client.crt
+
+    - name: start openvpn client
+      systemd:
+        name: openvpn@client
+        enabled: yes
+        state: restarted
