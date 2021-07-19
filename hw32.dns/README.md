@@ -145,3 +145,52 @@ semanage fcontext -a -e /var/named /etc/named && restorecon -R -v /etc/named && 
 ...
 ```
 ### Создаём настройки прямой и обратной зоны для `newdns` в `named.newdns.lab` и `named.newdns.lab.rev` ###
+
+----
+## Проверяем. ##
+*Client1* видит обе зоны, в зоне `dns.lab` - только `web1.dns.lab`
+```
+[vagrant@client ~]$nslookup web1.dns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+Name:   web1.dns.lab
+Address: 192.168.50.15
+
+[vagrant@client ~]$ nslookup web2.dns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+** server can't find web2.dns.lab: NXDOMAIN
+
+[vagrant@client ~]$ nslookup www.newdns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+Name:   www.newdns.lab
+Address: 192.168.50.20
+Name:   www.newdns.lab
+Address: 192.168.50.15
+```
+*Client2* видит только `dns.lab`
+```
+[vagrant@client2 ~]$ nslookup web1.dns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+Name:   web1.dns.lab
+Address: 192.168.50.15
+
+[vagrant@client2 ~]$ nslookup web2.dns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+Name:   web2.dns.lab
+Address: 192.168.50.20
+
+[vagrant@client2 ~]$ nslookup www.newdns.lab
+Server:         192.168.50.10
+Address:        192.168.50.10#53
+
+** server can't find www.newdns.lab: NXDOMAIN
+```
