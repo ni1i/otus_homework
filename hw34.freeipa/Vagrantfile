@@ -1,0 +1,31 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+    config.vm.box_check_update = true
+
+    config.vm.define "ipaserver.otus.local" do |s|
+      s.vm.box = "centos/7"
+      s.vm.hostname = "ipaserver.otus.local"
+      s.vm.provider "virtualbox" do |vb|
+        vb.memory = "4096"
+      end
+      s.vm.network "private_network", ip: "192.168.255.1", adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "ipa"
+     
+    end
+    config.vm.define "ipaclient.otus.local" do |c|
+      c.vm.box = "centos/7"
+      c.vm.hostname = "ipaclient.otus.local"
+      c.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024"
+      end
+      c.vm.network "private_network", ip: "192.168.255.2", adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "ipa"
+    end
+    
+    config.vm.provision "shell", inline: <<-SHELL
+      mkdir -p ~root/.ssh
+      cp ~vagrant/.ssh/auth* ~root/.ssh
+    SHELL
+    config.vm.provision "ansible", playbook: "playbook.yml"   
+end
