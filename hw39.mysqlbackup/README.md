@@ -1,5 +1,28 @@
 # ДЗ 39. MySQL: Backup + Репликация
 
+репликация mysql
+
+В материалах приложены ссылки на вагрант для репликации и дамп базы bet.dmp
+
+Базу развернуть на мастере и настроить так, чтобы реплицировались таблицы:
+
+| bookmaker          |
+
+| competition        |
+
+| market             |
+
+| odds               |
+
+| outcome
+
+*    Настроить GTID репликацию x варианты которые принимаются к сдаче
+
+*    рабочий вагрантафайл
+*    скрины или логи SHOW TABLES
+*    конфиги
+*    пример в логе изменения строки и появления строки на реплике
+
 
 ---
 
@@ -108,7 +131,7 @@ mysql> SHOW TABLES;
 +------------------+
 7 rows in set (0.00 sec)
 ```
-Создаём пользователя для репликации и даём ему права:
+Создаём пользователя для репликации, назначаем права и проверяем:
 ```
 mysql> CREATE USER 'repl'@'%' IDENTIFIED BY '!OtusLinux2021';
 Query OK, 0 rows affected (0.01 sec)
@@ -123,4 +146,27 @@ mysql> SELECT user,host FROM mysql.user where user='repl';
 
 mysql> GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%' IDENTIFIED BY '!OtusLinux2021';
 Query OK, 0 rows affected, 1 warning (0.01 sec)
+[root@master vagrant]# mysql -e "select user,host,repl_slave_priv from mysql.user where user='repl';"
++------+------+-----------------+
+| user | host | repl_slave_priv |
++------+------+-----------------+
+| repl | %    | Y               |
++------+------+-----------------+
 ```
+Создаём дамп базы, исключая таблицы `events_on_demand` и `v_same_event`, как было указано в ДЗ и смотрим результат:
+```
+[root@master vagrant]# mysqldump --all-databases --triggers --routines --master-data --ignore-table=bet.events_on_demand --ignore-table=bet.v_same_event -uroot -p > master.sql
+Enter password:
+Warning: A partial dump from a server that has GTIDs will by default include the GTIDs of all transactions, even those that changed suppressed parts of the database. If you don't want to restore GTIDs, pass --set-gtid-purged=OFF. To make a complete dump, pass --all-databases --triggers --routines --events.
+[root@master vagrant]# ls -l
+total 968
+-rw-r--r--. 1 root root 990636 Nov 10 09:25 master.sql
+```
+Файл дампа готов, теперь готовим *slave*.
+Раскомментируем в `/etc/my.cnf.d/05-binlog.cnf` строки:
+```
+#replicate-ignore-table=bet.events_on_demand
+#replicate-ignore-table=bet.v_same_event
+```
+Переписываем дамп с *master* на *slave*.
+Проверяем наличие базы и её структуру:
